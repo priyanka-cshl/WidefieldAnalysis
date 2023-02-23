@@ -1,0 +1,44 @@
+%% construct path to data folder and give some basic info
+opts.fPath = '/Users/Priyanka/Desktop/LABWORK_II/Data/Smellocator/testdata/07-Jul-2022_8'; %path to imaging data
+opts.fName = 'Frames_2_640_540_uint16'; %name of imaging data files.
+
+opts.trigLine = [2 3]; %analog lines for blue and violet light triggers.
+opts.sRate = 30; %sampling rate in Hz
+opts.fileExt = '.dat'; %type of video file. Use '.dat' for binary files (also works for .tif or .mj2 files)
+opts.downSample = 1; %spatial downsampling factor
+opts.plotChans = false; %flag to show separate channels when loading dual-wavelength data in each trial
+opts.stimLine = 4; %analog line that contains stimulus trigger.
+
+% opts.preStim = 0.5; %pre-stimulus duration in seconds
+% opts.postStim = 1; %post-stimulus duration in seconds
+% 
+% opts.downSample = 4; %spatial downsampling factor
+% opts.hemoCorrect = false; %hemodynamic correction is optional (this only works with dual-color data in raw datasets).
+% opts.preProc = true; %case if data is single channel and can be loaded directly (this is only true for the pre-processed example dataset).
+
+%% load imaging data
+rawFiles = dir([opts.fPath filesep opts.fName '*']); %find data files
+nrTrials = length(rawFiles); %nr of trials
+thisSessionBlueData = [];
+thisSessionVioletData = [];
+Framecount = [];
+firstframe = true;
+for T = 1:size(rawFiles,1)
+    disp(T);
+    
+    [bData,~,vData] = splitChannels_HX(opts,T,opts.fileExt); %split channels and get blue and violet data
+    Framecount = [Framecount; [size(bData,3) size(vData,3)]];
+    
+    for f = 1:size(bData,3)
+        if T == 1 && f == 1
+            imwrite(bData(:,:,f),'BlueFrames.tif');
+            imwrite(vData(:,:,f),'HemoFrames.tif');
+        else
+            imwrite(bData(:,:,f),'BlueFrames.tif','WriteMode','append');
+            imwrite(vData(:,:,f),'HemoFrames.tif','WriteMode','append');
+        end
+    end
+
+    %thisSessionBlueData = cat(3, thisSessionBlueData, bData); 
+    %thisSessionVioletData = cat(3, thisSessionVioletData, vData); 
+end
